@@ -2,6 +2,7 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
+#if os(iOS)
 struct SystemStatusControl: ControlWidget {
     static let kind = "com.monitormysolar.Task-Visualiser.systemStatus"
 
@@ -20,6 +21,7 @@ struct SystemStatusControl: ControlWidget {
         .description("Shows current CPU usage. Tap to refresh.")
     }
 }
+#endif
 
 struct RefreshMetricsIntent: AppIntent {
     static var title: LocalizedStringResource { "Refresh Metrics" }

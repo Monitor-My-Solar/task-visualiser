@@ -5,6 +5,8 @@ import SwiftUI
 struct TaskVisualiserWidgetBundle: WidgetBundle {
     var body: some Widget {
         SystemMetricWidget()
+        #if os(iOS)
         SystemStatusControl()
+        #endif
     }
 }
