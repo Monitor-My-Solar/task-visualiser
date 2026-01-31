@@ -1,17 +1,36 @@
-//
-//  Task_VisualiserApp.swift
-//  Task Visualiser
-//
-//  Created by Zak Hurst on 31/01/2026.
-//
-
 import SwiftUI
 
 @main
 struct Task_VisualiserApp: App {
+    @State private var appState = AppState()
+    @State private var monitorService = SystemMonitorService()
+    @State private var pinnedProcessService = PinnedProcessService()
+
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             ContentView()
+                .environment(appState)
+                .environment(monitorService)
+                .environment(pinnedProcessService)
+                .frame(minWidth: 800, minHeight: 500)
         }
+        .windowStyle(.titleBar)
+        .defaultSize(width: 1100, height: 700)
+
+        Settings {
+            SettingsView()
+                .environment(appState)
+                .environment(monitorService)
+        }
+
+        MenuBarExtra(isInserted: $appState.showMenuBarExtra) {
+            MenuBarView()
+                .environment(monitorService)
+                .environment(pinnedProcessService)
+        } label: {
+            let cpuText = String(format: "%.0f%%", monitorService.currentStats.cpu.totalUsage)
+            Label(cpuText, systemImage: "cpu")
+        }
+        .menuBarExtraStyle(.window)
     }
 }

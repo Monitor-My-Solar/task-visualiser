@@ -6,14 +6,66 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		314413E72F2EC0E500786E7C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 314413E62F2EC0E400786E7C /* WidgetKit.framework */; };
+		314413E92F2EC0E500786E7C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 314413E82F2EC0E500786E7C /* SwiftUI.framework */; };
+		314413F82F2EC0E500786E7C /* widgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 314413E42F2EC0E400786E7C /* widgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		314413F62F2EC0E500786E7C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3144135F2F2EB5BE00786E7C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 314413E32F2EC0E400786E7C;
+			remoteInfo = widgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		314413FD2F2EC0E500786E7C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				314413F82F2EC0E500786E7C /* widgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		314413672F2EB5BE00786E7C /* Task Visualiser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Task Visualiser.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		314413E42F2EC0E400786E7C /* widgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = widgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		314413E62F2EC0E400786E7C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		314413E82F2EC0E500786E7C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		314413FF2F2EC11F00786E7C /* widgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = widgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		314413F92F2EC0E500786E7C /* Exceptions for "widget" folder in "widgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 314413E32F2EC0E400786E7C /* widgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		314413692F2EB5BE00786E7C /* Task Visualiser */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Task Visualiser";
+			sourceTree = "<group>";
+		};
+		314413EA2F2EC0E500786E7C /* widget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				314413F92F2EC0E500786E7C /* Exceptions for "widget" folder in "widgetExtension" target */,
+			);
+			path = widget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,13 +78,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		314413E12F2EC0E400786E7C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				314413E92F2EC0E500786E7C /* SwiftUI.framework in Frameworks */,
+				314413E72F2EC0E500786E7C /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		3144135E2F2EB5BE00786E7C = {
 			isa = PBXGroup;
 			children = (
+				314413FF2F2EC11F00786E7C /* widgetExtension.entitlements */,
 				314413692F2EB5BE00786E7C /* Task Visualiser */,
+				314413EA2F2EC0E500786E7C /* widget */,
+				314413E52F2EC0E400786E7C /* Frameworks */,
 				314413682F2EB5BE00786E7C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +105,18 @@
 			isa = PBXGroup;
 			children = (
 				314413672F2EB5BE00786E7C /* Task Visualiser.app */,
+				314413E42F2EC0E400786E7C /* widgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		314413E52F2EC0E400786E7C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				314413E62F2EC0E400786E7C /* WidgetKit.framework */,
+				314413E82F2EC0E500786E7C /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,10 +129,12 @@
 				314413632F2EB5BE00786E7C /* Sources */,
 				314413642F2EB5BE00786E7C /* Frameworks */,
 				314413652F2EB5BE00786E7C /* Resources */,
+				314413FD2F2EC0E500786E7C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				314413F72F2EC0E500786E7C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				314413692F2EB5BE00786E7C /* Task Visualiser */,
@@ -69,6 +145,28 @@
 			productName = "Task Visualiser";
 			productReference = 314413672F2EB5BE00786E7C /* Task Visualiser.app */;
 			productType = "com.apple.product-type.application";
+		};
+		314413E32F2EC0E400786E7C /* widgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 314413FA2F2EC0E500786E7C /* Build configuration list for PBXNativeTarget "widgetExtension" */;
+			buildPhases = (
+				314413E02F2EC0E400786E7C /* Sources */,
+				314413E12F2EC0E400786E7C /* Frameworks */,
+				314413E22F2EC0E400786E7C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				314413EA2F2EC0E500786E7C /* widget */,
+			);
+			name = widgetExtension;
+			packageProductDependencies = (
+			);
+			productName = widgetExtension;
+			productReference = 314413E42F2EC0E400786E7C /* widgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +179,9 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					314413662F2EB5BE00786E7C = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					314413E32F2EC0E400786E7C = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -100,12 +201,20 @@
 			projectRoot = "";
 			targets = (
 				314413662F2EB5BE00786E7C /* Task Visualiser */,
+				314413E32F2EC0E400786E7C /* widgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		314413652F2EB5BE00786E7C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		314413E22F2EC0E400786E7C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +231,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		314413E02F2EC0E400786E7C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		314413F72F2EC0E500786E7C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 314413E32F2EC0E400786E7C /* widgetExtension */;
+			targetProxy = 314413F62F2EC0E500786E7C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		314413702F2EB5C000786E7C /* Debug */ = {
@@ -250,11 +374,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Task Visualiser/Task Visualiser.unsandboxed.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4YUJN363G6;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -282,6 +407,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Task Visualiser/Task Visualiser.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -309,6 +435,74 @@
 			};
 			name = Release;
 		};
+		314413FB2F2EC0E500786E7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = widgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4YUJN363G6;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = widget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.monitormysolar.Task-Visualiser.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		314413FC2F2EC0E500786E7C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = widgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4YUJN363G6;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = widget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.monitormysolar.Task-Visualiser.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -326,6 +520,15 @@
 			buildConfigurations = (
 				314413732F2EB5C000786E7C /* Debug */,
 				314413742F2EB5C000786E7C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		314413FA2F2EC0E500786E7C /* Build configuration list for PBXNativeTarget "widgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				314413FB2F2EC0E500786E7C /* Debug */,
+				314413FC2F2EC0E500786E7C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,24 +1,39 @@
-//
-//  ContentView.swift
-//  Task Visualiser
-//
-//  Created by Zak Hurst on 31/01/2026.
-//
-
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
+    @Environment(AppState.self) private var appState
+    @Environment(SystemMonitorService.self) private var monitorService
+    @Environment(PinnedProcessService.self) private var pinnedProcessService
 
-#Preview {
-    ContentView()
+    var body: some View {
+        @Bindable var appState = appState
+
+        NavigationSplitView {
+            SidebarView(selection: $appState.selectedTab)
+        } detail: {
+            switch appState.selectedTab {
+            case .dashboard:
+                DashboardView(viewModel: DashboardViewModel(monitorService: monitorService))
+            case .cpu:
+                CPUChartView(viewModel: CPUViewModel(monitorService: monitorService))
+            case .memory:
+                MemoryChartView(viewModel: MemoryViewModel(monitorService: monitorService))
+            case .network:
+                NetworkChartView(viewModel: NetworkViewModel(monitorService: monitorService))
+            case .disk:
+                DiskChartView(viewModel: DiskViewModel(monitorService: monitorService))
+            case .processes:
+                ProcessListView(viewModel: ProcessListViewModel(isSandboxed: appState.isSandboxed))
+            case nil:
+                Text("Select a category")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .task {
+            monitorService.refreshInterval = appState.refreshInterval
+            monitorService.start()
+            pinnedProcessService.start()
+        }
+    }
 }

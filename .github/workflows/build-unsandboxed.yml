@@ -1,0 +1,56 @@
+name: Build Unsandboxed
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Build archive
+        run: |
+          xcodebuild archive \
+            -project "Task Visualiser.xcodeproj" \
+            -scheme "Task Visualiser" \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/TaskVisualiser.xcarchive" \
+            ENABLE_APP_SANDBOX=NO \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_ENTITLEMENTS="Task Visualiser/Task Visualiser.unsandboxed.entitlements" \
+            SKIP_INSTALL=NO \
+            BUILD_LIBRARY_FOR_DISTRIBUTION=NO
+
+      - name: Export app
+        run: |
+          mkdir -p "$RUNNER_TEMP/export"
+          cp -R "$RUNNER_TEMP/TaskVisualiser.xcarchive/Products/Applications/Task Visualiser.app" "$RUNNER_TEMP/export/"
+
+      - name: Create DMG
+        run: |
+          mkdir -p "$RUNNER_TEMP/dmg-contents"
+          cp -R "$RUNNER_TEMP/export/Task Visualiser.app" "$RUNNER_TEMP/dmg-contents/"
+          ln -s /Applications "$RUNNER_TEMP/dmg-contents/Applications"
+          hdiutil create \
+            -volname "Task Visualiser" \
+            -srcfolder "$RUNNER_TEMP/dmg-contents" \
+            -ov \
+            -format UDZO \
+            "$RUNNER_TEMP/export/TaskVisualiser-unsandboxed.dmg"
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: TaskVisualiser-unsandboxed
+          path: ${{ runner.temp }}/export/TaskVisualiser-unsandboxed.dmg
