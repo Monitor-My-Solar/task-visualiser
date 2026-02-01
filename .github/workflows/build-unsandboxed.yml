@@ -70,6 +70,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/TaskVisualiser.xcarchive" \
             MACOSX_DEPLOYMENT_TARGET=15.0 \
             ENABLE_APP_SANDBOX=NO \
+            REGISTER_APP_GROUPS=NO \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
             CODE_SIGN_ENTITLEMENTS="Task Visualiser/Task Visualiser.unsandboxed.entitlements" \
