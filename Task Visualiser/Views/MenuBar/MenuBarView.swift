@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarView: View {
     @Environment(SystemMonitorService.self) private var monitorService
     @Environment(PinnedProcessService.self) private var pinnedService
+    @Environment(UpdaterService.self) private var updaterService
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -142,6 +143,16 @@ struct MenuBarView: View {
             }
 
             Divider()
+
+            if updaterService.updateAvailable {
+                Button {
+                    updaterService.openDownloadPage()
+                } label: {
+                    Label("Update Available — \(updaterService.latestRelease?.tagName ?? "")", systemImage: "arrow.down.app")
+                }
+                .buttonStyle(.link)
+                .foregroundStyle(.tint)
+            }
 
             Button {
                 openWindow(id: "main")

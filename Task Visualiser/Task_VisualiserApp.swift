@@ -5,6 +5,7 @@ struct Task_VisualiserApp: App {
     @State private var appState = AppState()
     @State private var monitorService = SystemMonitorService()
     @State private var pinnedProcessService = PinnedProcessService()
+    @State private var updaterService = UpdaterService()
 
     var body: some Scene {
         WindowGroup(id: "main") {
@@ -12,6 +13,7 @@ struct Task_VisualiserApp: App {
                 .environment(appState)
                 .environment(monitorService)
                 .environment(pinnedProcessService)
+                .environment(updaterService)
                 .frame(minWidth: 800, minHeight: 500)
         }
         .windowStyle(.titleBar)
@@ -21,12 +23,14 @@ struct Task_VisualiserApp: App {
             SettingsView()
                 .environment(appState)
                 .environment(monitorService)
+                .environment(updaterService)
         }
 
         MenuBarExtra(isInserted: $appState.showMenuBarExtra) {
             MenuBarView()
                 .environment(monitorService)
                 .environment(pinnedProcessService)
+                .environment(updaterService)
         } label: {
             let cpuText = String(format: "%.0f%%", monitorService.currentStats.cpu.totalUsage)
             Label(cpuText, systemImage: "cpu")

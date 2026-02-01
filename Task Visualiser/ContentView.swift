@@ -4,6 +4,7 @@ struct ContentView: View {
     @Environment(AppState.self) private var appState
     @Environment(SystemMonitorService.self) private var monitorService
     @Environment(PinnedProcessService.self) private var pinnedProcessService
+    @Environment(UpdaterService.self) private var updaterService
 
     var body: some View {
         @Bindable var appState = appState
@@ -34,6 +35,11 @@ struct ContentView: View {
             monitorService.refreshInterval = appState.refreshInterval
             monitorService.start()
             pinnedProcessService.start()
+            updaterService.startPeriodicChecks()
+        }
+        .sheet(isPresented: Bindable(updaterService).showUpdateAlert) {
+            UpdateAlertView()
+                .environment(updaterService)
         }
     }
 }

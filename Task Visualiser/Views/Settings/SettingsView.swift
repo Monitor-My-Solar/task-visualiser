@@ -3,6 +3,62 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(SystemMonitorService.self) private var monitorService
+    @Environment(UpdaterService.self) private var updaterService
+
+    private var updatesTab: some View {
+        @Bindable var updater = updaterService
+
+        return Form {
+            Toggle("Check for updates automatically", isOn: $updater.autoCheckForUpdates)
+
+            LabeledContent("Current Version") {
+                Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")
+                    .foregroundStyle(.secondary)
+            }
+
+            if let lastChecked = updaterService.lastChecked {
+                LabeledContent("Last Checked") {
+                    Text(lastChecked, style: .relative)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if let error = updaterService.lastError {
+                LabeledContent("Error") {
+                    Text(error)
+                        .foregroundStyle(.red)
+                        .font(.caption)
+                }
+            }
+
+            HStack {
+                Button("Check Now") {
+                    Task { await updaterService.checkForUpdates(userInitiated: true) }
+                }
+                .disabled(updaterService.isChecking)
+
+                if updaterService.isChecking {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+
+                if updaterService.updateAvailable {
+                    Spacer()
+                    Button("Download Update") {
+                        updaterService.openDownloadPage()
+                    }
+                }
+            }
+
+            if updaterService.updateAvailable, let release = updaterService.latestRelease {
+                LabeledContent("Available") {
+                    Text(release.tagName)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding()
+    }
 
     var body: some View {
         @Bindable var appState = appState
@@ -32,6 +88,11 @@ struct SettingsView: View {
                 Label("General", systemImage: "gear")
             }
 
+            updatesTab
+                .tabItem {
+                    Label("Updates", systemImage: "arrow.triangle.2.circlepath")
+                }
+
             VStack(spacing: 12) {
                 Image(systemName: "gauge.with.dots.needle.33percent")
                     .font(.system(size: 48))
@@ -60,6 +121,6 @@ struct SettingsView: View {
                 Label("About", systemImage: "info.circle")
             }
         }
-        .frame(width: 400, height: 250)
+        .frame(width: 400, height: 280)
     }
 }
