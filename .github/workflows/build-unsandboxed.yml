@@ -29,6 +29,38 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
 
+      - name: Import signing certificate
+        env:
+          CERTIFICATE_P12: ${{ secrets.CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+
+          # Create a temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Decode and import the certificate
+          echo "$CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Add keychain to search list
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+
+          # Allow codesign to access the key without prompting
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Find the signing identity
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | head -1 | grep -o '".*"' | tr -d '"')
+          echo "SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+
       - name: Build archive
         run: |
           xcodebuild archive \
@@ -38,9 +70,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/TaskVisualiser.xcarchive" \
             MACOSX_DEPLOYMENT_TARGET=15.0 \
             ENABLE_APP_SANDBOX=NO \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
             CODE_SIGN_ENTITLEMENTS="Task Visualiser/Task Visualiser.unsandboxed.entitlements" \
             SKIP_INSTALL=NO \
             BUILD_LIBRARY_FOR_DISTRIBUTION=NO
@@ -49,6 +79,12 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/export"
           cp -R "$RUNNER_TEMP/TaskVisualiser.xcarchive/Products/Applications/Task Visualiser.app" "$RUNNER_TEMP/export/"
+
+      - name: Sign app bundle
+        run: |
+          codesign --force --deep --options runtime \
+            --sign "$SIGNING_IDENTITY" \
+            "$RUNNER_TEMP/export/Task Visualiser.app"
 
       - name: Create DMG
         run: |
@@ -61,6 +97,37 @@ jobs:
             -ov \
             -format UDZO \
             "$RUNNER_TEMP/export/TaskVisualiser-${{ steps.version.outputs.version }}.dmg"
+          codesign --force --sign "$SIGNING_IDENTITY" \
+            "$RUNNER_TEMP/export/TaskVisualiser-${{ steps.version.outputs.version }}.dmg"
+
+      - name: Notarize DMG
+        env:
+          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          # Write the API key
+          mkdir -p "$RUNNER_TEMP/notary"
+          echo "$NOTARY_KEY_P8" | base64 --decode > "$RUNNER_TEMP/notary/AuthKey_${NOTARY_KEY_ID}.p8"
+
+          # Submit for notarization and wait
+          xcrun notarytool submit \
+            "$RUNNER_TEMP/export/TaskVisualiser-${{ steps.version.outputs.version }}.dmg" \
+            --key "$RUNNER_TEMP/notary/AuthKey_${NOTARY_KEY_ID}.p8" \
+            --key-id "$NOTARY_KEY_ID" \
+            --issuer "$NOTARY_ISSUER_ID" \
+            --wait
+
+          # Staple the notarization ticket to the DMG
+          xcrun stapler staple \
+            "$RUNNER_TEMP/export/TaskVisualiser-${{ steps.version.outputs.version }}.dmg"
+
+      - name: Clean up secrets
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/build.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/certificate.p12"
+          rm -rf "$RUNNER_TEMP/notary"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
