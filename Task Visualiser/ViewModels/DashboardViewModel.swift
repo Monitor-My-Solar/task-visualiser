@@ -8,6 +8,7 @@ final class DashboardViewModel {
 
     private(set) var cpuHistory: [Double] = []
     private(set) var memoryHistory: [Double] = []
+    private(set) var gpuHistory: [Double] = []
     private(set) var networkInHistory: [Double] = []
     private(set) var networkOutHistory: [Double] = []
     private(set) var diskReadHistory: [Double] = []
@@ -24,6 +25,9 @@ final class DashboardViewModel {
 
         let memValues = await monitorService.memoryHistory.values()
         memoryHistory = memValues.suffix(60).map(\.usagePercentage)
+
+        let gpuValues = await monitorService.gpuHistory.values()
+        gpuHistory = gpuValues.suffix(60).map(\.utilization)
 
         let netValues = await monitorService.networkHistory.values()
         networkInHistory = netValues.suffix(60).map(\.bytesInPerSecond)

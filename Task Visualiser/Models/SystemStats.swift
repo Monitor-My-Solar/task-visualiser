@@ -3,6 +3,7 @@ import Foundation
 struct SystemStats: Sendable {
     var cpu: CPUUsage
     var memory: MemoryUsage
+    var gpu: GPUUsage
     var network: NetworkUsage
     var disk: DiskUsage
     var battery: BatteryUsage
@@ -11,6 +12,7 @@ struct SystemStats: Sendable {
     static let zero = SystemStats(
         cpu: .zero,
         memory: .zero,
+        gpu: .zero,
         network: .zero,
         disk: .zero,
         battery: .zero,

@@ -21,6 +21,8 @@ extension Color {
 
     static let batteryColor = Color.yellow
     static let batteryChargingColor = Color.green
+
+    static let gpuColor = Color.teal
 }
 
 extension ShapeStyle where Self == Color {
@@ -44,4 +46,6 @@ extension ShapeStyle where Self == Color {
 
     static var batteryColor: Color { .yellow }
     static var batteryChargingColor: Color { .green }
+
+    static var gpuColor: Color { .teal }
 }

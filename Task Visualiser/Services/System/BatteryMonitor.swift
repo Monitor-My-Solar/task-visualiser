@@ -4,21 +4,32 @@ import IOKit.ps
 final class BatteryMonitor: Sendable {
 
     nonisolated func snapshot() -> BatteryUsage {
+        let processThermalState = ProcessInfo.processInfo.thermalState
+        let thermalState: BatteryUsage.ThermalState
+        switch processThermalState {
+        case .nominal: thermalState = .nominal
+        case .fair: thermalState = .fair
+        case .serious: thermalState = .serious
+        case .critical: thermalState = .critical
+        @unknown default: thermalState = .nominal
+        }
         let psInfo = IOPSCopyPowerSourcesInfo().takeRetainedValue()
         let psList = IOPSCopyPowerSourcesList(psInfo).takeRetainedValue() as? [CFTypeRef] ?? []
 
         guard let first = psList.first,
               let desc = IOPSGetPowerSourceDescription(psInfo, first)?.takeUnretainedValue() as? [String: Any] else {
+            // No battery hardware (desktop Mac) — still report energy/thermal info
             return BatteryUsage(
                 level: 0,
                 isCharging: false,
-                isPluggedIn: false,
-                powerSource: .unknown,
+                isPluggedIn: true,
+                powerSource: .ac,
                 cycleCount: nil,
                 health: nil,
                 timeRemaining: nil,
-                isPresent: false,
-                thermalState: .init(from: ProcessInfo.processInfo.thermalState),
+                isPresent: true,
+                hasBattery: false,
+                thermalState: thermalState,
                 timestamp: .now
             )
         }
@@ -74,7 +85,8 @@ final class BatteryMonitor: Sendable {
             health: health,
             timeRemaining: timeRemaining,
             isPresent: true,
-            thermalState: .init(from: ProcessInfo.processInfo.thermalState),
+            hasBattery: true,
+            thermalState: thermalState,
             timestamp: .now
         )
     }

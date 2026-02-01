@@ -19,6 +19,8 @@ struct ContentView: View {
                 CPUChartView(viewModel: CPUViewModel(monitorService: monitorService))
             case .memory:
                 MemoryChartView(viewModel: MemoryViewModel(monitorService: monitorService))
+            case .gpu:
+                GPUChartView(viewModel: GPUViewModel(monitorService: monitorService))
             case .network:
                 NetworkChartView(viewModel: NetworkViewModel(monitorService: monitorService))
             case .disk:

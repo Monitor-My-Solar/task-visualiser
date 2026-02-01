@@ -5,27 +5,42 @@ struct BatteryChartView: View {
     let viewModel: BatteryViewModel
 
     private var accentColor: Color {
+        if !viewModel.battery.hasBattery { return thermalColor }
         if viewModel.battery.isCharging { return .batteryChargingColor }
         if viewModel.battery.level < 20 { return .red }
         return .batteryColor
     }
 
+    private var thermalColor: Color {
+        switch viewModel.battery.thermalState {
+        case .nominal: .green
+        case .fair: .yellow
+        case .serious: .orange
+        case .critical: .red
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                currentSection
-                historySection
+                if viewModel.battery.hasBattery {
+                    batteryStatusSection
+                }
+                thermalSection
+                if viewModel.battery.hasBattery {
+                    historySection
+                }
             }
             .padding()
         }
-        .navigationTitle("Battery")
+        .navigationTitle("Energy")
         .task {
             await viewModel.refreshHistory()
         }
     }
 
-    private var currentSection: some View {
-        GroupBox("Current Status") {
+    private var batteryStatusSection: some View {
+        GroupBox("Battery") {
             HStack(spacing: 40) {
                 GaugeView(
                     value: viewModel.battery.level,
@@ -37,20 +52,20 @@ struct BatteryChartView: View {
                 .frame(width: 120, height: 140)
 
                 VStack(alignment: .leading, spacing: 12) {
-                    BatteryStatRow(label: "Level", value: viewModel.battery.level.formattedPercentage, color: accentColor)
-                    BatteryStatRow(label: "Power Source", value: viewModel.battery.powerSource.rawValue, color: .secondary)
-                    BatteryStatRow(label: "Thermal State", value: viewModel.battery.thermalState.rawValue, color: thermalColor)
+                    EnergyStatRow(label: "Level", value: viewModel.battery.level.formattedPercentage, color: accentColor)
+                    EnergyStatRow(label: "Power Source", value: viewModel.battery.powerSource.rawValue, color: .secondary)
+                    EnergyStatRow(label: "Status", value: viewModel.battery.isCharging ? "Charging" : viewModel.battery.isPluggedIn ? "Plugged In" : "On Battery", color: .secondary)
 
                     if let cycleCount = viewModel.battery.cycleCount {
-                        BatteryStatRow(label: "Cycle Count", value: "\(cycleCount)", color: .secondary)
+                        EnergyStatRow(label: "Cycle Count", value: "\(cycleCount)", color: .secondary)
                     }
 
                     if let health = viewModel.battery.health {
-                        BatteryStatRow(label: "Health", value: health.formattedPercentage, color: healthColor(health))
+                        EnergyStatRow(label: "Health", value: health.formattedPercentage, color: healthColor(health))
                     }
 
                     if let timeRemaining = viewModel.battery.timeRemaining {
-                        BatteryStatRow(label: "Time Remaining", value: formatTimeRemaining(timeRemaining), color: .secondary)
+                        EnergyStatRow(label: "Time Remaining", value: formatTimeRemaining(timeRemaining), color: .secondary)
                     }
                 }
             }
@@ -58,8 +73,29 @@ struct BatteryChartView: View {
         }
     }
 
+    private var thermalSection: some View {
+        GroupBox("System Thermal State") {
+            HStack(spacing: 40) {
+                VStack(spacing: 8) {
+                    Image(systemName: "thermometer.medium")
+                        .font(.system(size: 36))
+                        .foregroundStyle(thermalColor)
+                    Text(viewModel.battery.thermalState.rawValue)
+                        .font(.system(.title2, design: .rounded, weight: .bold))
+                        .foregroundStyle(thermalColor)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    EnergyStatRow(label: "Thermal State", value: viewModel.battery.thermalState.rawValue, color: thermalColor)
+                    EnergyStatRow(label: "Power Source", value: viewModel.battery.powerSource.rawValue, color: .secondary)
+                }
+            }
+            .padding()
+        }
+    }
+
     private var historySection: some View {
-        GroupBox("History") {
+        GroupBox("Battery History") {
             if viewModel.levelHistory.isEmpty {
                 Text("Collecting data…")
                     .foregroundStyle(.secondary)
@@ -95,15 +131,6 @@ struct BatteryChartView: View {
         }
     }
 
-    private var thermalColor: Color {
-        switch viewModel.battery.thermalState {
-        case .nominal: .green
-        case .fair: .yellow
-        case .serious: .orange
-        case .critical: .red
-        }
-    }
-
     private func healthColor(_ health: Double) -> Color {
         if health >= 80 { return .green }
         if health >= 50 { return .yellow }
@@ -120,7 +147,7 @@ struct BatteryChartView: View {
     }
 }
 
-private struct BatteryStatRow: View {
+private struct EnergyStatRow: View {
     let label: String
     let value: String
     var color: Color = .primary

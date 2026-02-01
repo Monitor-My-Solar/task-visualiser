@@ -42,6 +42,23 @@ struct MenuBarView: View {
 
             Divider()
 
+            // GPU
+            HStack {
+                Image(systemName: "display")
+                    .foregroundStyle(.gpuColor)
+                    .frame(width: 20)
+                Text("GPU")
+                    .font(.headline)
+                Spacer()
+                Text(monitorService.currentStats.gpu.utilization.formattedPercentage)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+            ProgressView(value: monitorService.currentStats.gpu.utilization, total: 100)
+                .tint(.gpuColor)
+
+            Divider()
+
             // Network
             HStack {
                 Image(systemName: "network")
@@ -100,23 +117,25 @@ struct MenuBarView: View {
             }
             .font(.caption)
 
-            // Battery
-            if monitorService.currentStats.battery.isPresent {
-                Divider()
+            Divider()
 
-                HStack {
-                    Image(systemName: "battery.100percent")
-                        .foregroundStyle(batteryMenuColor)
-                        .frame(width: 20)
-                    Text("Battery")
-                        .font(.headline)
-                    Spacer()
+            // Energy
+            HStack {
+                Image(systemName: "bolt.fill")
+                    .foregroundStyle(energyMenuColor)
+                    .frame(width: 20)
+                Text("Energy")
+                    .font(.headline)
+                Spacer()
+                if monitorService.currentStats.battery.hasBattery {
                     Text(monitorService.currentStats.battery.level.formattedPercentage)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
+            }
+            if monitorService.currentStats.battery.hasBattery {
                 ProgressView(value: monitorService.currentStats.battery.level, total: 100)
-                    .tint(batteryMenuColor)
+                    .tint(energyMenuColor)
                 HStack {
                     Text(monitorService.currentStats.battery.isCharging ? "Charging" : monitorService.currentStats.battery.isPluggedIn ? "Plugged In" : "On Battery")
                         .font(.caption)
@@ -128,6 +147,12 @@ struct MenuBarView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+            }
+            HStack {
+                Text("Thermal: \(monitorService.currentStats.battery.thermalState.rawValue)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
             }
 
             if !pinnedService.pinnedProcesses.isEmpty {
@@ -176,12 +201,17 @@ struct MenuBarView: View {
 
             if updaterService.updateAvailable {
                 Button {
-                    updaterService.openDownloadPage()
+                    updaterService.downloadAndInstall()
                 } label: {
-                    Label("Update Available — \(updaterService.latestRelease?.tagName ?? "")", systemImage: "arrow.down.app")
+                    Label("Install Update — \(updaterService.latestRelease?.tagName ?? "")", systemImage: "arrow.down.app")
                 }
                 .buttonStyle(.link)
                 .foregroundStyle(.tint)
+
+                if updaterService.isDownloading {
+                    ProgressView(value: updaterService.downloadProgress)
+                        .progressViewStyle(.linear)
+                }
             }
 
             Button {
@@ -200,7 +230,7 @@ struct MenuBarView: View {
         .frame(width: 260)
     }
 
-    private var batteryMenuColor: Color {
+    private var energyMenuColor: Color {
         let battery = monitorService.currentStats.battery
         if battery.isCharging { return .batteryChargingColor }
         if battery.level < 20 { return .red }

@@ -9,6 +9,7 @@ struct BatteryUsage: Sendable {
     var health: Double?
     var timeRemaining: TimeInterval?
     var isPresent: Bool
+    var hasBattery: Bool
     var thermalState: ThermalState
     var timestamp: Date
 
@@ -40,11 +41,12 @@ struct BatteryUsage: Sendable {
         level: 0,
         isCharging: false,
         isPluggedIn: false,
-        powerSource: .unknown,
+        powerSource: .ac,
         cycleCount: nil,
         health: nil,
         timeRemaining: nil,
-        isPresent: false,
+        isPresent: true,
+        hasBattery: false,
         thermalState: .nominal,
         timestamp: .now
     )

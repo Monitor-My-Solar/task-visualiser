@@ -36,21 +36,45 @@ struct UpdateAlertView: View {
                 }
             }
 
-            HStack(spacing: 12) {
-                Button("Later") {
-                    updaterService.dismissUpdate()
+            if updaterService.isDownloading {
+                VStack(spacing: 8) {
+                    ProgressView(value: updaterService.downloadProgress)
+                        .progressViewStyle(.linear)
+                    Text("Downloading… \(Int(updaterService.downloadProgress * 100))%")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
-                .keyboardShortcut(.cancelAction)
+            } else if updaterService.isInstalling {
+                VStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Installing update…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                if let error = updaterService.installError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
 
-                Button("Skip This Version") {
-                    updaterService.skipVersion()
-                }
+                HStack(spacing: 12) {
+                    Button("Later") {
+                        updaterService.dismissUpdate()
+                    }
+                    .keyboardShortcut(.cancelAction)
 
-                Button("Download Update") {
-                    updaterService.openDownloadPage()
-                    updaterService.dismissUpdate()
+                    Button("Skip This Version") {
+                        updaterService.skipVersion()
+                    }
+
+                    Button("Install Update") {
+                        updaterService.downloadAndInstall()
+                    }
+                    .keyboardShortcut(.defaultAction)
                 }
-                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(24)

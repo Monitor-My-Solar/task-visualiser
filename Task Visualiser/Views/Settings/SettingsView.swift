@@ -44,8 +44,8 @@ struct SettingsView: View {
 
                 if updaterService.updateAvailable {
                     Spacer()
-                    Button("Download Update") {
-                        updaterService.openDownloadPage()
+                    Button("Install Update") {
+                        updaterService.downloadAndInstall()
                     }
                 }
             }

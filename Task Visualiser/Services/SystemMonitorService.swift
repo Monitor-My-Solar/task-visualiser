@@ -8,12 +8,14 @@ final class SystemMonitorService {
 
     let cpuHistory = HistoryManager<CPUUsage>()
     let memoryHistory = HistoryManager<MemoryUsage>()
+    let gpuHistory = HistoryManager<GPUUsage>()
     let networkHistory = HistoryManager<NetworkUsage>()
     let diskHistory = HistoryManager<DiskUsage>()
     let batteryHistory = HistoryManager<BatteryUsage>()
 
     private let cpuMonitor = CPUMonitor()
     private let memoryMonitor = MemoryMonitor()
+    private let gpuMonitor = GPUMonitor()
     private let networkMonitor = NetworkMonitor()
     private let diskMonitor = DiskMonitor()
     private let batteryMonitor = BatteryMonitor()
@@ -45,6 +47,7 @@ final class SystemMonitorService {
     private func poll() async {
         let cpu = cpuMonitor.snapshot()
         let memory = memoryMonitor.snapshot()
+        let gpu = gpuMonitor.snapshot()
         let network = networkMonitor.snapshot()
         let disk = diskMonitor.snapshot()
         let battery = batteryMonitor.snapshot()
@@ -52,6 +55,7 @@ final class SystemMonitorService {
         let stats = SystemStats(
             cpu: cpu,
             memory: memory,
+            gpu: gpu,
             network: network,
             disk: disk,
             battery: battery,
@@ -60,6 +64,7 @@ final class SystemMonitorService {
 
         await cpuHistory.append(cpu)
         await memoryHistory.append(memory)
+        await gpuHistory.append(gpu)
         await networkHistory.append(network)
         await diskHistory.append(disk)
         await batteryHistory.append(battery)
