@@ -27,6 +27,8 @@ struct ContentView: View {
                 DiskChartView(viewModel: DiskViewModel(monitorService: monitorService))
             case .battery:
                 BatteryChartView(viewModel: BatteryViewModel(monitorService: monitorService))
+            case .thermal:
+                ThermalChartView(viewModel: ThermalViewModel(monitorService: monitorService))
             case .processes:
                 ProcessListView(viewModel: ProcessListViewModel(isSandboxed: appState.isSandboxed))
             case nil:
@@ -44,6 +46,9 @@ struct ContentView: View {
         .sheet(isPresented: Bindable(updaterService).showUpdateAlert) {
             UpdateAlertView()
                 .environment(updaterService)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+            monitorService.restoreAllFansToAuto()
         }
     }
 }

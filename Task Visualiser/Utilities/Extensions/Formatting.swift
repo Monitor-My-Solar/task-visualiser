@@ -4,6 +4,18 @@ extension Double {
     var formattedPercentage: String {
         String(format: "%.1f%%", self)
     }
+
+    var formattedTemperature: String {
+        String(format: "%.1f\u{00B0}C", self)
+    }
+
+    var formattedWatts: String {
+        String(format: "%.1f W", self)
+    }
+
+    var formattedRPM: String {
+        String(format: "%.0f RPM", self)
+    }
 }
 
 extension UInt64 {

@@ -8,6 +8,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
     case network = "Network"
     case disk = "Disk"
     case battery = "Energy"
+    case thermal = "Thermal"
     case processes = "Processes"
 
     var id: String { rawValue }
@@ -21,6 +22,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
         case .network: "network"
         case .disk: "internaldrive"
         case .battery: "bolt.fill"
+        case .thermal: "thermometer.medium"
         case .processes: "list.bullet.rectangle"
         }
     }

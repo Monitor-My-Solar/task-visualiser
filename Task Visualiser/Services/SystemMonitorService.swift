@@ -12,6 +12,7 @@ final class SystemMonitorService {
     let networkHistory = HistoryManager<NetworkUsage>()
     let diskHistory = HistoryManager<DiskUsage>()
     let batteryHistory = HistoryManager<BatteryUsage>()
+    let thermalHistory = HistoryManager<ThermalUsage>()
 
     private let cpuMonitor = CPUMonitor()
     private let memoryMonitor = MemoryMonitor()
@@ -19,6 +20,7 @@ final class SystemMonitorService {
     private let networkMonitor = NetworkMonitor()
     private let diskMonitor = DiskMonitor()
     private let batteryMonitor = BatteryMonitor()
+    private let thermalMonitor = SMCThermalMonitor()
 
     private var pollingTask: Task<Void, Never>?
     var refreshInterval: TimeInterval = 1.0
@@ -42,6 +44,20 @@ final class SystemMonitorService {
         isRunning = false
     }
 
+    // MARK: - Fan control
+
+    func setFanSpeed(fanIndex: Int, targetRPM: Double) {
+        thermalMonitor.setFanSpeed(fanIndex: fanIndex, targetRPM: targetRPM)
+    }
+
+    func setFanAuto(fanIndex: Int) {
+        thermalMonitor.setFanAuto(fanIndex: fanIndex)
+    }
+
+    func restoreAllFansToAuto() {
+        thermalMonitor.restoreAllFansToAuto()
+    }
+
     private var widgetUpdateCounter = 0
 
     private func poll() async {
@@ -51,6 +67,7 @@ final class SystemMonitorService {
         let network = networkMonitor.snapshot()
         let disk = diskMonitor.snapshot()
         let battery = batteryMonitor.snapshot()
+        let thermal = thermalMonitor.snapshot()
 
         let stats = SystemStats(
             cpu: cpu,
@@ -59,6 +76,7 @@ final class SystemMonitorService {
             network: network,
             disk: disk,
             battery: battery,
+            thermal: thermal,
             timestamp: .now
         )
 
@@ -68,6 +86,7 @@ final class SystemMonitorService {
         await networkHistory.append(network)
         await diskHistory.append(disk)
         await batteryHistory.append(battery)
+        await thermalHistory.append(thermal)
 
         self.currentStats = stats
 

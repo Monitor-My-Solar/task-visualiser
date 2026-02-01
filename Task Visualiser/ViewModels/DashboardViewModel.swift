@@ -14,6 +14,8 @@ final class DashboardViewModel {
     private(set) var diskReadHistory: [Double] = []
     private(set) var diskWriteHistory: [Double] = []
     private(set) var batteryLevelHistory: [Double] = []
+    private(set) var thermalTempHistory: [Double] = []
+    private(set) var thermalPowerHistory: [Double] = []
 
     init(monitorService: SystemMonitorService) {
         self.monitorService = monitorService
@@ -39,5 +41,9 @@ final class DashboardViewModel {
 
         let batteryValues = await monitorService.batteryHistory.values()
         batteryLevelHistory = batteryValues.suffix(60).map(\.level)
+
+        let thermalValues = await monitorService.thermalHistory.values()
+        thermalTempHistory = thermalValues.suffix(60).compactMap(\.cpuTemperature)
+        thermalPowerHistory = thermalValues.suffix(60).compactMap(\.systemPowerWatts)
     }
 }

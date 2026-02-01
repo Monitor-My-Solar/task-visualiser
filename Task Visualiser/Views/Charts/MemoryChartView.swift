@@ -99,7 +99,17 @@ struct MemoryChartView: View {
                 .foregroundStyle(.memoryCompressedColor.opacity(0.5))
                 .interpolationMethod(.catmullRom)
             }
-            .chartYAxisLabel("Bytes")
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                    AxisValueLabel {
+                        if let v = value.as(Double.self) {
+                            Text(UInt64(v).formattedByteCount)
+                                .font(.system(size: 9))
+                        }
+                    }
+                    AxisGridLine()
+                }
+            }
             .frame(height: 250)
             .padding()
         }

@@ -155,6 +155,58 @@ struct MenuBarView: View {
                 Spacer()
             }
 
+            // Thermal
+            if monitorService.currentStats.thermal.hasData {
+                Divider()
+
+                HStack {
+                    Image(systemName: "thermometer.medium")
+                        .foregroundStyle(.thermalColor)
+                        .frame(width: 20)
+                    Text("Thermal")
+                        .font(.headline)
+                    Spacer()
+                }
+
+                HStack {
+                    if let cpuTemp = monitorService.currentStats.thermal.cpuTemperature {
+                        Label {
+                            Text(cpuTemp.formattedTemperature)
+                                .monospacedDigit()
+                        } icon: {
+                            Image(systemName: "cpu")
+                                .foregroundStyle(.thermalColor)
+                        }
+                    }
+                    Spacer()
+                    if let power = monitorService.currentStats.thermal.systemPowerWatts {
+                        Label {
+                            Text(power.formattedWatts)
+                                .monospacedDigit()
+                        } icon: {
+                            Image(systemName: "bolt.fill")
+                                .foregroundStyle(.powerColor)
+                        }
+                    }
+                }
+                .font(.caption)
+
+                if !monitorService.currentStats.thermal.fans.isEmpty {
+                    HStack(spacing: 12) {
+                        ForEach(monitorService.currentStats.thermal.fans) { fan in
+                            HStack(spacing: 4) {
+                                Image(systemName: "fan")
+                                    .foregroundStyle(.fanColor)
+                                Text(fan.currentRPM.formattedRPM)
+                                    .monospacedDigit()
+                            }
+                        }
+                        Spacer()
+                    }
+                    .font(.caption)
+                }
+            }
+
             if !pinnedService.pinnedProcesses.isEmpty {
                 Divider()
 

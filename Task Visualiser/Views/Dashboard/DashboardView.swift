@@ -45,6 +45,12 @@ struct DashboardView: View {
                     sparkline: viewModel.batteryLevelHistory
                 )
 
+                ThermalSummaryWidget(
+                    thermal: viewModel.stats.thermal,
+                    cpuTempSparkline: viewModel.thermalTempHistory,
+                    powerSparkline: viewModel.thermalPowerHistory
+                )
+
                 ForEach(pinnedService.pinnedProcesses) { pinned in
                     PinnedProcessWidget(
                         pinned: pinned,
