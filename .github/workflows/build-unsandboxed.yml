@@ -22,11 +22,16 @@ jobs:
         id: version
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
-            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+            TAG="${GITHUB_REF#refs/tags/}"
+            VER="${TAG#v}"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "version=$VER" >> "$GITHUB_OUTPUT"
+            # Build number from run number for unique, ascending builds
+            echo "build=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=" >> "$GITHUB_OUTPUT"
             echo "version=dev-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            echo "build=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Select Xcode
@@ -78,6 +83,12 @@ jobs:
 
       - name: Build archive
         run: |
+          # Set marketing version from tag (e.g. 1.2.1) or fall back to project default
+          MKTG_VER="${{ steps.version.outputs.version }}"
+          if [[ "$MKTG_VER" == dev-* ]]; then
+            MKTG_VER=""
+          fi
+
           xcodebuild archive \
             -project "Task Visualiser.xcodeproj" \
             -scheme "Task Visualiser" \
@@ -92,7 +103,9 @@ jobs:
             DEVELOPMENT_TEAM=4YUJN363G6 \
             PROVISIONING_PROFILE_SPECIFIER="" \
             SKIP_INSTALL=NO \
-            BUILD_LIBRARY_FOR_DISTRIBUTION=NO
+            BUILD_LIBRARY_FOR_DISTRIBUTION=NO \
+            ${MKTG_VER:+MARKETING_VERSION="$MKTG_VER"} \
+            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build }}"
 
       - name: Export app
         run: |

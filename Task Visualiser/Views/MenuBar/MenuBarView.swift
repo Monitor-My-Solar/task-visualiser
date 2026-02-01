@@ -222,6 +222,13 @@ struct MenuBarView: View {
             }
             .buttonStyle(.link)
 
+            Button {
+                NSApp.terminate(nil)
+            } label: {
+                Label("Quit Task Visualiser", systemImage: "power")
+            }
+            .buttonStyle(.link)
+
             Divider()
 
             BrandingFooterView(compact: true)
