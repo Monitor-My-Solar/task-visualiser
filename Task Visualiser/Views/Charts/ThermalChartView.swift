@@ -26,8 +26,12 @@ struct ThermalChartView: View {
                        viewModel.thermal.gpuPowerWatts != nil {
                         powerSection
                     }
-                    if !isSandboxed && !viewModel.thermal.fans.isEmpty {
-                        fanControlSection
+                    if !viewModel.thermal.fans.isEmpty {
+                        if viewModel.canControlFans {
+                            fanControlSection
+                        } else if !isSandboxed {
+                            fanControlUnavailableSection
+                        }
                     }
                     temperatureHistorySection
                     if !viewModel.thermal.fans.isEmpty {
@@ -42,7 +46,10 @@ struct ThermalChartView: View {
         }
         .navigationTitle("Thermal")
         .task {
-            await viewModel.refreshHistory()
+            while !Task.isCancelled {
+                await viewModel.refreshHistory()
+                try? await Task.sleep(for: .seconds(1))
+            }
         }
     }
 
@@ -260,24 +267,29 @@ struct ThermalChartView: View {
                     .frame(height: 200)
                     .frame(maxWidth: .infinity)
             } else {
-                Chart {
-                    ForEach(Array(viewModel.fanRPMHistory.enumerated()), id: \.offset) { fanIdx, rpmValues in
-                        ForEach(Array(rpmValues.enumerated()), id: \.offset) { sampleIdx, rpm in
-                            LineMark(
-                                x: .value("Sample", sampleIdx),
-                                y: .value("RPM", rpm),
-                                series: .value("Fan", "Fan \(fanIdx + 1)")
-                            )
-                            .foregroundStyle(.fanColor.opacity(1.0 - Double(fanIdx) * 0.3))
-                            .interpolationMethod(.catmullRom)
-                        }
-                    }
-                }
-                .chartYAxisLabel("RPM")
-                .frame(height: 200)
-                .padding()
+                fanRPMChart
             }
         }
+    }
+
+    private var fanRPMChart: some View {
+        Chart {
+            ForEach(viewModel.fanRPMHistory.indices, id: \.self) { fanIdx in
+                let rpmValues = viewModel.fanRPMHistory[fanIdx]
+                ForEach(rpmValues.indices, id: \.self) { sampleIdx in
+                    LineMark(
+                        x: .value("Sample", sampleIdx),
+                        y: .value("RPM", rpmValues[sampleIdx]),
+                        series: .value("Fan", "Fan \(fanIdx + 1)")
+                    )
+                    .foregroundStyle(Color.fanColor.opacity(1.0 - Double(fanIdx) * 0.3))
+                    .interpolationMethod(.catmullRom)
+                }
+            }
+        }
+        .chartYAxisLabel("RPM")
+        .frame(height: 200)
+        .padding()
     }
 
     // MARK: - History: Power
@@ -308,6 +320,24 @@ struct ThermalChartView: View {
             .chartYAxisLabel("Watts")
             .frame(height: 200)
             .padding()
+        }
+    }
+
+    // MARK: - Fan Control Unavailable
+
+    private var fanControlUnavailableSection: some View {
+        GroupBox("Fan Control") {
+            VStack(spacing: 8) {
+                Image(systemName: "lock.shield")
+                    .font(.system(size: 24))
+                    .foregroundStyle(.secondary)
+                Text("Fan control requires administrator privileges")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
         }
     }
 

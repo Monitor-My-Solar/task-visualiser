@@ -43,6 +43,8 @@ final class ThermalViewModel {
 
     // MARK: - Fan control
 
+    var canControlFans: Bool { monitorService.canControlFans }
+
     func setFanSpeed(fanIndex: Int, targetRPM: Double) {
         monitorService.setFanSpeed(fanIndex: fanIndex, targetRPM: targetRPM)
     }

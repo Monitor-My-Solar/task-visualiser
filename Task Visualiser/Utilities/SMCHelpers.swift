@@ -14,6 +14,10 @@ enum SMCHelpers {
         return decodeValue(raw.bytes, dataType: raw.dataType, dataSize: raw.dataSize)
     }
 
+    static func decodeRawResult(_ result: SMCReadResult) -> Double? {
+        decodeValue(result.bytes, dataType: result.dataType, dataSize: result.dataSize)
+    }
+
     static func readRawKey(_ key: String) -> SMCReadResult? {
         Connection.shared.readKey(fourCharCode(key))
     }
@@ -28,12 +32,19 @@ enum SMCHelpers {
         var bytes: [UInt8]
     }
 
-    // MARK: - FPE2 encoding (for writing fan target speeds)
+    // MARK: - Value encoding (for writing fan target speeds)
 
     static func encodeFPE2(_ value: Double) -> [UInt8] {
         let clamped = max(0, min(value, 16383.75))
         let raw = UInt16(clamped * 4.0)
         return [UInt8(raw >> 8), UInt8(raw & 0xFF)]
+    }
+
+    static func encodeFLT(_ value: Double) -> [UInt8] {
+        let bits = Float(value).bitPattern
+        // Little-endian byte order (matching how SMC stores flt values)
+        return [UInt8(bits & 0xFF), UInt8((bits >> 8) & 0xFF),
+                UInt8((bits >> 16) & 0xFF), UInt8((bits >> 24) & 0xFF)]
     }
 
     // MARK: - FourCharCode helper
@@ -90,8 +101,9 @@ enum SMCHelpers {
 
         case dataTypeFLT:
             guard bytes.count >= 4 else { return nil }
-            let bits = (UInt32(bytes[0]) << 24) | (UInt32(bytes[1]) << 16) |
-                       (UInt32(bytes[2]) << 8) | UInt32(bytes[3])
+            // SMC stores IEEE float in little-endian byte order
+            let bits = UInt32(bytes[0]) | (UInt32(bytes[1]) << 8) |
+                       (UInt32(bytes[2]) << 16) | (UInt32(bytes[3]) << 24)
             return Double(Float(bitPattern: bits))
 
         case dataTypeUI8:

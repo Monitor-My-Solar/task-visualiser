@@ -46,6 +46,10 @@ final class SystemMonitorService {
 
     // MARK: - Fan control
 
+    var canControlFans: Bool {
+        thermalMonitor.canControlFans
+    }
+
     func setFanSpeed(fanIndex: Int, targetRPM: Double) {
         thermalMonitor.setFanSpeed(fanIndex: fanIndex, targetRPM: targetRPM)
     }

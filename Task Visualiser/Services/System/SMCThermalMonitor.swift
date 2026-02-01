@@ -1,6 +1,6 @@
 import Foundation
 
-final class SMCThermalMonitor: Sendable {
+final class SMCThermalMonitor: @unchecked Sendable {
 
     nonisolated func snapshot() -> ThermalUsage {
         guard SMCHelpers.isAvailable else { return .zero }
@@ -21,10 +21,19 @@ final class SMCThermalMonitor: Sendable {
 
     // MARK: - Fan control
 
-    func setFanSpeed(fanIndex: Int, targetRPM: Double) {
-        guard SMCHelpers.isAvailable else { return }
+    /// Tests whether SMC fan writes are permitted (requires root on Apple Silicon).
+    lazy var canControlFans: Bool = {
+        guard SMCHelpers.isAvailable else { return false }
+        // Try a no-op write: set mode to its current value
+        let modeKey = "F0Md"
+        let current = SMCHelpers.readRawKey(modeKey)
+        let testByte = current?.bytes.first ?? 0
+        return SMCHelpers.writeRawKey(modeKey, dataType: SMCHelpers.dataTypeUI8, bytes: [testByte])
+    }()
 
-        // Read min/max to clamp
+    func setFanSpeed(fanIndex: Int, targetRPM: Double) {
+        guard canControlFans else { return }
+
         let minKey = String(format: "F%dMn", fanIndex)
         let maxKey = String(format: "F%dMx", fanIndex)
         let minRPM = SMCHelpers.readDouble(minKey) ?? 0
@@ -32,53 +41,57 @@ final class SMCThermalMonitor: Sendable {
 
         let clamped = max(minRPM, min(targetRPM, maxRPM))
 
-        // Set mode to forced (1)
         let modeKey = String(format: "F%dMd", fanIndex)
         _ = SMCHelpers.writeRawKey(modeKey, dataType: SMCHelpers.dataTypeUI8, bytes: [1])
 
-        // Write target RPM
+        // Write target RPM — match the data type the SMC actually uses for this key
         let targetKey = String(format: "F%dTg", fanIndex)
-        let encoded = SMCHelpers.encodeFPE2(clamped)
-        _ = SMCHelpers.writeRawKey(targetKey, dataType: SMCHelpers.dataTypeFPE2, bytes: encoded)
+        if let existing = SMCHelpers.readRawKey(targetKey) {
+            let encoded: [UInt8]
+            let dataType: UInt32
+            if existing.dataType == SMCHelpers.dataTypeFLT {
+                encoded = SMCHelpers.encodeFLT(clamped)
+                dataType = SMCHelpers.dataTypeFLT
+            } else {
+                encoded = SMCHelpers.encodeFPE2(clamped)
+                dataType = SMCHelpers.dataTypeFPE2
+            }
+            _ = SMCHelpers.writeRawKey(targetKey, dataType: dataType, bytes: encoded)
+        }
     }
 
     func setFanAuto(fanIndex: Int) {
-        guard SMCHelpers.isAvailable else { return }
+        guard canControlFans else { return }
         let modeKey = String(format: "F%dMd", fanIndex)
         _ = SMCHelpers.writeRawKey(modeKey, dataType: SMCHelpers.dataTypeUI8, bytes: [0])
     }
 
     func restoreAllFansToAuto() {
-        guard SMCHelpers.isAvailable else { return }
+        guard canControlFans else { return }
         let fanCount = Int(SMCHelpers.readDouble("FNum") ?? 0)
         for i in 0..<fanCount {
             setFanAuto(fanIndex: i)
         }
     }
 
-    // MARK: - State for temperature discovery
+    // MARK: - Cached state (protected by lock)
 
     private let lock = NSLock()
-    private let discoveredKeysPtr = UnsafeMutablePointer<[DiscoveredSensor]?>.allocate(capacity: 1)
+    private var discoveredSensors: [DiscoveredSensor]?
+    private var temperatureCache: [String: Double] = [:]
+    private var systemPowerCache: Double?
+    private var cpuPowerCache: Double?
+    private var gpuPowerCache: Double?
 
     private struct DiscoveredSensor {
         let key: String
         let label: String
     }
 
-    init() {
-        discoveredKeysPtr.initialize(to: nil)
-    }
-
-    deinit {
-        discoveredKeysPtr.deinitialize(count: 1)
-        discoveredKeysPtr.deallocate()
-    }
-
     // MARK: - Fan reading
 
     private func readFans() -> [ThermalUsage.FanStatus] {
-        guard let fanCount = SMCHelpers.readDouble("FNum"), fanCount > 0 else { return [] }
+        guard let fanCount = SMCHelpers.readDouble("FNum"), fanCount > 0, fanCount <= 10 else { return [] }
 
         var fans: [ThermalUsage.FanStatus] = []
         for i in 0..<Int(fanCount) {
@@ -108,7 +121,7 @@ final class SMCThermalMonitor: Sendable {
         return fans
     }
 
-    // MARK: - Temperature reading (with discovery cache)
+    // MARK: - Temperature reading (discovery + memoized values)
 
     private static let knownTemperatureKeys: [(key: String, label: String)] = [
         // CPU
@@ -158,45 +171,102 @@ final class SMCThermalMonitor: Sendable {
 
     private func readTemperatures() -> [ThermalUsage.TemperatureReading] {
         lock.lock()
-        let cached = discoveredKeysPtr.pointee
+        let cached = discoveredSensors
+        var tempCache = temperatureCache
         lock.unlock()
 
+        // Step 1: Discover which keys exist (only once, by raw read not value)
         let sensors: [DiscoveredSensor]
         if let cached {
             sensors = cached
         } else {
-            // Discovery: probe all known keys, cache which exist
             var discovered: [DiscoveredSensor] = []
             for (key, label) in Self.knownTemperatureKeys {
-                if let val = SMCHelpers.readDouble(key), val > 0 && val < 200 {
+                if SMCHelpers.readRawKey(key) != nil {
                     discovered.append(DiscoveredSensor(key: key, label: label))
                 }
             }
-            lock.lock()
-            discoveredKeysPtr.pointee = discovered
-            lock.unlock()
+            // Only lock in the result if we found sensors; retry next poll otherwise
+            if !discovered.isEmpty {
+                lock.lock()
+                discoveredSensors = discovered
+                lock.unlock()
+            }
             sensors = discovered
         }
 
+        // Step 2: Read each discovered sensor, update cache on valid reads
         var readings: [ThermalUsage.TemperatureReading] = []
         for sensor in sensors {
             if let celsius = SMCHelpers.readDouble(sensor.key), celsius > 0 && celsius < 200 {
+                tempCache[sensor.key] = celsius
+            }
+            // Always emit from cache — stable list, last-known-good value
+            if let value = tempCache[sensor.key] {
                 readings.append(ThermalUsage.TemperatureReading(
                     id: sensor.key,
                     label: sensor.label,
-                    celsius: celsius
+                    celsius: value
                 ))
             }
         }
+
+        lock.lock()
+        temperatureCache = tempCache
+        lock.unlock()
+
         return readings
     }
 
-    // MARK: - Power reading
+    // MARK: - Power reading (memoized, robust decoding)
+
+    /// Reads a power SMC key and returns watts, trying multiple decode strategies.
+    private func readPowerWatts(_ key: String) -> Double? {
+        guard let raw = SMCHelpers.readRawKey(key) else { return nil }
+        let bytes = raw.bytes
+
+        // 1. Standard type-aware decoder
+        if let value = SMCHelpers.decodeRawResult(raw) {
+            if value > 0 && value < 500 { return value }
+            // Some SMC implementations report milliwatts
+            if value >= 500 && value < 500_000 { return value / 1000.0 }
+        }
+
+        // 2. Fallback: IEEE 32-bit float (little-endian)
+        if bytes.count >= 4 {
+            let bits = UInt32(bytes[0]) | (UInt32(bytes[1]) << 8) |
+                       (UInt32(bytes[2]) << 16) | (UInt32(bytes[3]) << 24)
+            let f = Float(bitPattern: bits)
+            if f.isFinite && f > 0 && f < 500 { return Double(f) }
+        }
+
+        // 3. Fallback: sp78 signed 7.8 fixed-point
+        if bytes.count >= 2 {
+            let raw16 = Int16(bitPattern: (UInt16(bytes[0]) << 8) | UInt16(bytes[1]))
+            let val = Double(raw16) / 256.0
+            if val > 0 && val < 500 { return val }
+        }
+
+        return nil
+    }
 
     private func readPower() -> (system: Double?, cpu: Double?, gpu: Double?) {
-        let system = SMCHelpers.readDouble("PSTR")
-        let cpu = SMCHelpers.readDouble("PCPC")
-        let gpu = SMCHelpers.readDouble("PCPG")
-        return (system, cpu, gpu)
+        lock.lock()
+        var sysPower = systemPowerCache
+        var cpuPwr = cpuPowerCache
+        var gpuPwr = gpuPowerCache
+        lock.unlock()
+
+        if let v = readPowerWatts("PSTR") { sysPower = v }
+        if let v = readPowerWatts("PCPC") { cpuPwr = v }
+        if let v = readPowerWatts("PCPG") { gpuPwr = v }
+
+        lock.lock()
+        systemPowerCache = sysPower
+        cpuPowerCache = cpuPwr
+        gpuPowerCache = gpuPwr
+        lock.unlock()
+
+        return (sysPower, cpuPwr, gpuPwr)
     }
 }
