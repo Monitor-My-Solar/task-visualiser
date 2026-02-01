@@ -61,6 +61,18 @@ jobs:
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | head -1 | grep -o '".*"' | tr -d '"')
           echo "SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
 
+      - name: Strip app groups from entitlements for CI
+        run: |
+          # Replace both entitlements files with empty dicts so no provisioning profile is needed
+          cat > "Task Visualiser/Task Visualiser.unsandboxed.entitlements" << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict/>
+          </plist>
+          PLIST
+          cp "Task Visualiser/Task Visualiser.unsandboxed.entitlements" widgetExtension.entitlements
+
       - name: Build archive
         run: |
           xcodebuild archive \
