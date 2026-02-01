@@ -23,6 +23,8 @@ struct ContentView: View {
                 NetworkChartView(viewModel: NetworkViewModel(monitorService: monitorService))
             case .disk:
                 DiskChartView(viewModel: DiskViewModel(monitorService: monitorService))
+            case .battery:
+                BatteryChartView(viewModel: BatteryViewModel(monitorService: monitorService))
             case .processes:
                 ProcessListView(viewModel: ProcessListViewModel(isSandboxed: appState.isSandboxed))
             case nil:

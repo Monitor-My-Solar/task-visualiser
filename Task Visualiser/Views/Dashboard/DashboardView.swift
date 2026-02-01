@@ -34,6 +34,13 @@ struct DashboardView: View {
                     writeSparkline: viewModel.diskWriteHistory
                 )
 
+                if viewModel.stats.battery.isPresent {
+                    BatterySummaryWidget(
+                        battery: viewModel.stats.battery,
+                        sparkline: viewModel.batteryLevelHistory
+                    )
+                }
+
                 ForEach(pinnedService.pinnedProcesses) { pinned in
                     PinnedProcessWidget(
                         pinned: pinned,

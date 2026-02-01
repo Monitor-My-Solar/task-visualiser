@@ -101,8 +101,24 @@ struct SettingsView: View {
                 Text("Task Visualiser")
                     .font(.title2.bold())
 
-                Text("System Monitor")
+                Text("by Monitor My Solar")
                     .foregroundStyle(.secondary)
+
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+
+                Divider()
+
+                HStack(spacing: 16) {
+                    Link(destination: URL(string: "https://github.com/MonitorMySolar/Task-Visualiser")!) {
+                        Label("GitHub", systemImage: "link")
+                    }
+                    Link(destination: URL(string: "https://monitormysolar.com")!) {
+                        Label("Website", systemImage: "globe")
+                    }
+                }
+                .font(.caption)
 
                 Divider()
 
@@ -121,6 +137,6 @@ struct SettingsView: View {
                 Label("About", systemImage: "info.circle")
             }
         }
-        .frame(width: 400, height: 280)
+        .frame(width: 400, height: 320)
     }
 }

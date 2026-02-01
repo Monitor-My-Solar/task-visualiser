@@ -18,6 +18,9 @@ extension Color {
     static let diskColor = Color.orange
     static let diskReadColor = Color.orange
     static let diskWriteColor = Color.red
+
+    static let batteryColor = Color.yellow
+    static let batteryChargingColor = Color.green
 }
 
 extension ShapeStyle where Self == Color {
@@ -38,4 +41,7 @@ extension ShapeStyle where Self == Color {
     static var diskColor: Color { .orange }
     static var diskReadColor: Color { .orange }
     static var diskWriteColor: Color { .red }
+
+    static var batteryColor: Color { .yellow }
+    static var batteryChargingColor: Color { .green }
 }

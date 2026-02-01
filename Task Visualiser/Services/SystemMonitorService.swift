@@ -10,11 +10,13 @@ final class SystemMonitorService {
     let memoryHistory = HistoryManager<MemoryUsage>()
     let networkHistory = HistoryManager<NetworkUsage>()
     let diskHistory = HistoryManager<DiskUsage>()
+    let batteryHistory = HistoryManager<BatteryUsage>()
 
     private let cpuMonitor = CPUMonitor()
     private let memoryMonitor = MemoryMonitor()
     private let networkMonitor = NetworkMonitor()
     private let diskMonitor = DiskMonitor()
+    private let batteryMonitor = BatteryMonitor()
 
     private var pollingTask: Task<Void, Never>?
     var refreshInterval: TimeInterval = 1.0
@@ -45,12 +47,14 @@ final class SystemMonitorService {
         let memory = memoryMonitor.snapshot()
         let network = networkMonitor.snapshot()
         let disk = diskMonitor.snapshot()
+        let battery = batteryMonitor.snapshot()
 
         let stats = SystemStats(
             cpu: cpu,
             memory: memory,
             network: network,
             disk: disk,
+            battery: battery,
             timestamp: .now
         )
 
@@ -58,6 +62,7 @@ final class SystemMonitorService {
         await memoryHistory.append(memory)
         await networkHistory.append(network)
         await diskHistory.append(disk)
+        await batteryHistory.append(battery)
 
         self.currentStats = stats
 

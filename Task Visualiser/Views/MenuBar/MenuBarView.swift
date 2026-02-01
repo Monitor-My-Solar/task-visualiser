@@ -100,6 +100,36 @@ struct MenuBarView: View {
             }
             .font(.caption)
 
+            // Battery
+            if monitorService.currentStats.battery.isPresent {
+                Divider()
+
+                HStack {
+                    Image(systemName: "battery.100percent")
+                        .foregroundStyle(batteryMenuColor)
+                        .frame(width: 20)
+                    Text("Battery")
+                        .font(.headline)
+                    Spacer()
+                    Text(monitorService.currentStats.battery.level.formattedPercentage)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                ProgressView(value: monitorService.currentStats.battery.level, total: 100)
+                    .tint(batteryMenuColor)
+                HStack {
+                    Text(monitorService.currentStats.battery.isCharging ? "Charging" : monitorService.currentStats.battery.isPluggedIn ? "Plugged In" : "On Battery")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if let timeRemaining = monitorService.currentStats.battery.timeRemaining {
+                        Text(formatMenuTimeRemaining(timeRemaining))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
             if !pinnedService.pinnedProcesses.isEmpty {
                 Divider()
 
@@ -161,8 +191,28 @@ struct MenuBarView: View {
                 Label("Open Main Window", systemImage: "macwindow")
             }
             .buttonStyle(.link)
+
+            Divider()
+
+            BrandingFooterView(compact: true)
         }
         .padding()
         .frame(width: 260)
+    }
+
+    private var batteryMenuColor: Color {
+        let battery = monitorService.currentStats.battery
+        if battery.isCharging { return .batteryChargingColor }
+        if battery.level < 20 { return .red }
+        return .batteryColor
+    }
+
+    private func formatMenuTimeRemaining(_ seconds: TimeInterval) -> String {
+        let hours = Int(seconds) / 3600
+        let minutes = (Int(seconds) % 3600) / 60
+        if hours > 0 {
+            return "\(hours)h \(minutes)m remaining"
+        }
+        return "\(minutes)m remaining"
     }
 }

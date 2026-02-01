@@ -12,6 +12,7 @@ final class DashboardViewModel {
     private(set) var networkOutHistory: [Double] = []
     private(set) var diskReadHistory: [Double] = []
     private(set) var diskWriteHistory: [Double] = []
+    private(set) var batteryLevelHistory: [Double] = []
 
     init(monitorService: SystemMonitorService) {
         self.monitorService = monitorService
@@ -31,5 +32,8 @@ final class DashboardViewModel {
         let diskValues = await monitorService.diskHistory.values()
         diskReadHistory = diskValues.suffix(60).map(\.readPerSecond)
         diskWriteHistory = diskValues.suffix(60).map(\.writePerSecond)
+
+        let batteryValues = await monitorService.batteryHistory.values()
+        batteryLevelHistory = batteryValues.suffix(60).map(\.level)
     }
 }

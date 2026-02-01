@@ -5,6 +5,7 @@ struct SystemStats: Sendable {
     var memory: MemoryUsage
     var network: NetworkUsage
     var disk: DiskUsage
+    var battery: BatteryUsage
     var timestamp: Date
 
     static let zero = SystemStats(
@@ -12,6 +13,7 @@ struct SystemStats: Sendable {
         memory: .zero,
         network: .zero,
         disk: .zero,
+        battery: .zero,
         timestamp: .now
     )
 }
